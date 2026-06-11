@@ -3,6 +3,7 @@ import React from 'react';
 import { Table, Chip, Button, Tooltip } from "@heroui/react";
 // Assuming Gravity Icons maps to standard lucide equivalents; adjust paths if using a custom package
 import { Eye, Edit2, Trash2 } from "lucide-react"; 
+import { getCompanyJobs } from '@/lib/api/jobs';
 
 const RecruiterJobs = async () => {
     const companyId = 'company_123'; 

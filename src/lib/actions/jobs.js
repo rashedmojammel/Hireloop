@@ -1,4 +1,4 @@
-'use server'
+// 'use server'
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
@@ -12,6 +12,6 @@ export const createJob = async (newJobData) => {
         body: JSON.stringify(newJobData)
     });
 
-    return res.json();
+    return await res.json();
 
 }
