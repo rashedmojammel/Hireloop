@@ -7,383 +7,194 @@ import { useSession, signOut } from "@/lib/auth-client";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data: session, isPending } = useSession();
+  const { data: session } = useSession();
+
   const user = session?.user;
 
   const handleSignOut = async () => {
     await signOut();
-  };
+
+  }
 
   const navLinks = [
-    { label: "Browse Jobs", href: "/jobs" },
-    { label: "Company", href: "/company" },
-    { label: "Pricing", href: "/plans" },
+    {
+      label: "Browse Jobs",
+      href: "/jobs",
+    },
+    {
+      label: "Companies",
+      href: "/companies",
+    },
+    {
+      label: "Pricing",
+      href: "/plans",
+    },
   ];
 
+  const dashboardLinks = {
+    seeker: '/dashboard/seeker',
+    recruiter: '/dashboard/recruiter',
+    admin: '/dashboard/admin'
+  }
+
+  if (user?.email) {
+    navLinks.push(
+      {
+        label: 'Dashboard',
+        href: dashboardLinks[user?.role || 'seeker']
+      }
+    )
+  }
+
   return (
-    <>
-      <style>{`
-        .hl-nav {
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          background: rgba(8, 8, 16, 0.85);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .hl-nav-inner {
-          max-width: 1280px;
-          margin: 0 auto;
-          height: 68px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 24px;
-        }
-
-        /* LOGO */
-        .hl-logo {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          text-decoration: none;
-        }
-
-        .hl-logo-mark {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 15px;
-          font-weight: 800;
-          color: #fff;
-          letter-spacing: -0.02em;
-          flex-shrink: 0;
-          box-shadow: 0 0 16px rgba(124,58,237,0.35);
-        }
-
-        .hl-logo-text {
-          font-size: 15px;
-          font-weight: 700;
-          color: #f0f0f8;
-          letter-spacing: -0.02em;
-        }
-
-        /* CENTER NAV LINKS */
-        .hl-nav-links {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          align-items: center;
-          gap: 2px;
-          list-style: none;
-          margin: 0;
-          padding: 4px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 12px;
-        }
-
-        .hl-nav-links li a {
-          display: block;
-          padding: 6px 14px;
-          font-size: 13px;
-          font-weight: 500;
-          color: rgba(200, 200, 220, 0.75);
-          text-decoration: none;
-          border-radius: 8px;
-          transition: color 0.15s, background 0.15s;
-          letter-spacing: 0.01em;
-        }
-
-        .hl-nav-links li a:hover {
-          color: #f0f0f8;
-          background: rgba(255,255,255,0.07);
-        }
-
-        /* RIGHT AUTH AREA */
-        .hl-nav-right {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .hl-greeting {
-          font-size: 13px;
-          color: rgba(180,180,200,0.7);
-          font-weight: 500;
-        }
-
-        .hl-signout-btn {
-          background: transparent;
-          border: 1px solid rgba(255,255,255,0.1);
-          color: rgba(180,180,200,0.8);
-          padding: 6px 14px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
-        }
-
-        .hl-signout-btn:hover {
-          border-color: rgba(255,255,255,0.2);
-          color: #f0f0f8;
-          background: rgba(255,255,255,0.05);
-        }
-
-        .hl-signin-link {
-          font-size: 13px;
-          font-weight: 500;
-          color: #a78bfa;
-          text-decoration: none;
-          transition: color 0.15s;
-          letter-spacing: 0.01em;
-        }
-
-        .hl-signin-link:hover {
-          color: #c4b5fd;
-        }
-
-        .hl-cta-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          height: 36px;
-          padding: 0 18px;
-          background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
-          color: #fff !important;
-          font-size: 13px;
-          font-weight: 600;
-          border-radius: 9px;
-          text-decoration: none;
-          transition: opacity 0.15s, transform 0.15s;
-          box-shadow: 0 2px 12px rgba(124,58,237,0.3);
-          letter-spacing: 0.01em;
-          white-space: nowrap;
-        }
-
-        .hl-cta-btn:hover {
-          opacity: 0.88;
-          transform: translateY(-1px);
-        }
-
-        /* DIVIDER */
-        .hl-divider {
-          width: 1px;
-          height: 20px;
-          background: rgba(255,255,255,0.1);
-        }
-
-        /* HAMBURGER */
-        .hl-hamburger {
-          display: none;
-          align-items: center;
-          justify-content: center;
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: transparent;
-          cursor: pointer;
-          color: rgba(200,200,220,0.8);
-          transition: background 0.15s;
-        }
-
-        .hl-hamburger:hover {
-          background: rgba(255,255,255,0.06);
-          color: #fff;
-        }
-
-        /* MOBILE MENU */
-        .hl-mobile-menu {
-          border-top: 1px solid rgba(255,255,255,0.06);
-          background: #08080f;
-          padding: 16px 20px 20px;
-        }
-
-        .hl-mobile-links {
-          list-style: none;
-          margin: 0 0 12px;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .hl-mobile-links li a {
-          display: block;
-          padding: 10px 12px;
-          font-size: 14px;
-          font-weight: 500;
-          color: rgba(200,200,220,0.75);
-          text-decoration: none;
-          border-radius: 8px;
-          transition: background 0.15s, color 0.15s;
-        }
-
-        .hl-mobile-links li a:hover {
-          background: rgba(255,255,255,0.05);
-          color: #f0f0f8;
-        }
-
-        .hl-mobile-auth {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          padding-top: 12px;
-          border-top: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .hl-mobile-signin {
-          display: block;
-          padding: 10px 12px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #a78bfa;
-          text-decoration: none;
-          border-radius: 8px;
-          transition: background 0.15s;
-        }
-
-        .hl-mobile-signin:hover {
-          background: rgba(167,139,250,0.08);
-        }
-
-        .hl-mobile-cta {
-          display: block;
-          text-align: center;
-          padding: 11px 16px;
-          background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
-          color: #fff;
-          font-size: 14px;
-          font-weight: 600;
-          border-radius: 10px;
-          text-decoration: none;
-          transition: opacity 0.15s;
-          box-shadow: 0 2px 12px rgba(124,58,237,0.25);
-        }
-
-        .hl-mobile-cta:hover {
-          opacity: 0.88;
-        }
-
-        @media (max-width: 767px) {
-          .hl-nav-links { display: none; }
-          .hl-nav-right .hl-desktop-only { display: none; }
-          .hl-hamburger { display: flex; }
-        }
-
-        @media (min-width: 768px) {
-          .hl-hamburger { display: none; }
-          .hl-mobile-menu { display: none; }
-        }
-      `}</style>
-
-      <nav className="hl-nav">
-        <div className="hl-nav-inner">
-
-          {/* Logo */}
-          <Link href="/" className="hl-logo">
-            <div className="hl-logo-mark">P</div>
-            <span className="hl-logo-text">Hire Loop</span>
-          </Link>
-
-          {/* Center nav links — desktop */}
-          <ul className="hl-nav-links">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href}>{link.label}</Link>
-              </li>
-            ))}
-          </ul>
-
-          {/* Right auth area */}
-          <div className="hl-nav-right">
-            <div className="hl-desktop-only" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {user ? (
-                <>
-                  <span className="hl-greeting">Hi, {user.name}!</span>
-                  <div className="hl-divider" />
-                  <button className="hl-signout-btn" onClick={handleSignOut}>
-                    Sign out
-                  </button>
-                </>
-              ) : (
-                <Link href="/auth/signin" className="hl-signin-link">
-                  Sign in
-                </Link>
-              )}
-              <div className="hl-divider" />
-              <Link href="/register" className="hl-cta-btn">
-                Get started
-              </Link>
-            </div>
-
-            {/* Hamburger — mobile */}
-            <button
-              className="hl-hamburger"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                </svg>
-              )}
-            </button>
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0B0B0F]/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* LOGO */}
+        <Link href="/" className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 shadow-lg">
+            <span className="text-xl font-bold text-white">P</span>
           </div>
-        </div>
 
-        {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="hl-mobile-menu">
-            <ul className="hl-mobile-links">
+          <div className="hidden leading-none sm:block">
+            <h1 className="text-lg font-bold text-white">
+              Hire Loop
+            </h1>
+          </div>
+        </Link>
+
+        {/* RIGHT SIDE */}
+        <div className="flex items-center gap-4">
+          {/* Desktop Menu */}
+          <div className="hidden items-center gap-6 md:flex">
+            {/* Nav Links */}
+            <ul className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} onClick={() => setIsMenuOpen(false)}>
+                  <Link
+                    href={link.href}
+                    className="rounded-full px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white"
+                  >
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
 
-            <div className="hl-mobile-auth">
-              {user ? (
-                <>
-                  <span style={{ padding: "10px 12px", fontSize: 14, color: "rgba(180,180,200,0.7)" }}>
+            {/* Vertical Divider */}
+            <div className="h-6 w-px bg-white/20" />
+
+            {/* Auth Links */}
+            <div className="flex items-center gap-4">
+              {
+                user ?
+                  <>
                     Hi, {user.name}!
-                  </span>
-                  <button
-                    className="hl-signout-btn"
-                    style={{ textAlign: "left", padding: "10px 12px", borderRadius: 8 }}
-                    onClick={handleSignOut}
+                    <Button onClick={handleSignOut}
+                      variant="ghost">Sign Out</Button>
+                  </>
+                  :
+                  <Link
+                    href="/auth/signin"
+                    className="text-sm font-medium text-violet-400 transition hover:text-violet-300"
                   >
-                    Sign out
-                  </button>
-                </>
-              ) : (
-                <Link href="/auth/signin" className="hl-mobile-signin" onClick={() => setIsMenuOpen(false)}>
-                  Sign in
-                </Link>
-              )}
-              <Link href="/register" className="hl-mobile-cta" onClick={() => setIsMenuOpen(false)}>
-                Get started
-              </Link>
+                    Sign In
+                  </Link>}
+
+              <Button
+                as={Link}
+                href="/register"
+                radius="lg"
+                className="h-11 bg-white px-6 text-sm font-semibold text-black hover:bg-gray-200"
+              >
+                Get Started
+              </Button>
             </div>
           </div>
-        )}
-      </nav>
-    </>
+
+          {/* MOBILE MENU BUTTON */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="flex items-center justify-center rounded-lg p-2 text-white transition hover:bg-white/10 md:hidden"
+            aria-label="Toggle Menu"
+          >
+            {isMenuOpen ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* MOBILE MENU */}
+      {isMenuOpen && (
+        <div className="border-t border-white/10 bg-[#0B0B0F] md:hidden">
+          <div className="space-y-3 px-4 py-6">
+            {/* Nav Links */}
+            <ul className="space-y-2">
+              {navLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="block rounded-xl px-4 py-3 text-base font-medium text-gray-300 transition hover:bg-white/5 hover:text-white"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {/* Divider */}
+            <div className="border-t border-white/10 pt-4">
+              <div className="flex flex-col gap-3">
+                <Link
+                  href="/login"
+                  className="rounded-xl px-4 py-3 text-base font-medium text-violet-400 transition hover:bg-white/5"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+
+                <Button
+                  as={Link}
+                  href="/register"
+                  className="bg-white font-semibold text-black"
+                  radius="lg"
+                >
+                  Get Started
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </nav>
   );
 }
