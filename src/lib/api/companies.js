@@ -1,7 +1,9 @@
 import { serverFetch } from "../core/server";
 import { getUserSession } from "../core/session";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+export const getCompanies = async () => {
+    return serverFetch(`/api/companies`);
+}
 
 export const getRecruiterCompany = async (recruiterId) => {
     return serverFetch(`/api/my/companies?recruiterId=${recruiterId}`);
