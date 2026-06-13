@@ -5,7 +5,6 @@ import React from 'react';
 import JobApply from './JobApply';
 import { getApplicationsByApplicant } from '@/lib/api/applications';
 import Link from 'next/link';
-import { ShieldExclamation, CircleInfo, Rocket } from '@gravity-ui/icons';
 import { getPlanById } from '@/lib/api/plans';
 
 const ApplyPage = async ({ params }) => {
@@ -19,20 +18,20 @@ const ApplyPage = async ({ params }) => {
     // Role guard
     if (user.role !== 'seeker') {
         return (
-            <div className="w-full min-h-[80vh] flex items-center justify-center p-6 bg-zinc-950">
-                <div className="max-w-sm w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center text-center gap-4">
-                    <div className="w-11 h-11 bg-amber-950/60 border border-amber-900/40 text-amber-500 rounded-xl flex items-center justify-center">
-                        <ShieldExclamation className="w-5 h-5" />
+            <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
+                <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
+                    <div className="w-11 h-11 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
                     </div>
-                    <div>
-                        <h3 className="text-[15px] font-semibold text-zinc-100 mb-1.5">Access restricted</h3>
-                        <p className="text-[13px] text-zinc-500 leading-relaxed">
-                            Only job seekers can apply for positions. Sign in with a seeker account to continue.
-                        </p>
-                    </div>
+                    <h3 className="text-base font-semibold text-zinc-100 mb-2">Employer accounts can't apply</h3>
+                    <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+                        You're signed in as a company. To apply for jobs, sign in with a job seeker account instead.
+                    </p>
                     <Link
                         href="/auth/signin"
-                        className="mt-1 text-[13px] font-medium text-zinc-200 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-5 py-2 rounded-lg transition"
+                        className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium rounded-xl transition-colors"
                     >
                         Switch account
                     </Link>
@@ -41,127 +40,120 @@ const ApplyPage = async ({ params }) => {
         );
     }
 
-    const applications = await getApplicationsByApplicant(user.id);
+    const [applications, job] = await Promise.all([
+        getApplicationsByApplicant(user.id),
+        getJobById(id),
+    ]);
+
     const plan = await getPlanById(user?.plan || 'seeker_free');
-    const job = await getJobById(id);
 
     const applicationCount = applications?.length || 0;
     const hasReachedLimit = applicationCount >= plan.maxApplicationsPerMonth;
-    const usagePercentage = Math.min((applicationCount / plan.maxApplicationsPerMonth) * 100, 100);
+    const usagePercent = Math.min((applicationCount / plan.maxApplicationsPerMonth) * 100, 100);
 
-    const barColor = hasReachedLimit
-        ? 'bg-red-500'
-        : usagePercentage > 66
-        ? 'bg-amber-500'
-        : 'bg-blue-500';
+    const trackColor =
+        hasReachedLimit
+            ? 'bg-red-500'
+            : usagePercent > 66
+            ? 'bg-amber-500'
+            : 'bg-indigo-500';
+
+    const statColor =
+        hasReachedLimit ? 'text-red-400' : 'text-indigo-400';
 
     const remaining = plan.maxApplicationsPerMonth - applicationCount;
 
     return (
-        <div className="w-full min-h-screen bg-zinc-950 text-zinc-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mx-auto space-y-4">
+        <div className="min-h-screen bg-zinc-950 text-zinc-50 py-14 px-4">
+            <div className="max-w-2xl mx-auto space-y-6">
 
-                {/* Quota tracker card */}
-                <div className="bg-zinc-900 border border-zinc-800/80 rounded-2xl p-6">
-
-                    {/* Top row: stat + plan pill */}
-                    <div className="flex items-start justify-between gap-4 mb-5">
+                {/* Quota tracker */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                    <div className="flex items-start justify-between gap-4 mb-3">
                         <div>
-                            <p className="text-[11px] font-medium uppercase tracking-widest text-zinc-600 mb-1.5">
+                            <p className="text-[11px] font-medium uppercase tracking-widest text-zinc-500 mb-1">
                                 Applications this month
                             </p>
-                            <div className="flex items-baseline gap-1.5">
-                                <span className={`text-3xl font-bold tracking-tight leading-none ${hasReachedLimit ? 'text-red-400' : 'text-zinc-100'}`}>
-                                    {applicationCount}
+                            <p className="text-xl font-semibold leading-none">
+                                <span className={statColor}>{applicationCount}</span>
+                                <span className="text-sm font-normal text-zinc-500 ml-1">
+                                    / {plan.maxApplicationsPerMonth} used
                                 </span>
-                                <span className="text-base text-zinc-600 font-normal">
-                                    / {plan.maxApplicationsPerMonth}
-                                </span>
-                            </div>
-                            <p className={`text-[12px] mt-1 ${hasReachedLimit ? 'text-red-600' : 'text-zinc-600'}`}>
-                                {hasReachedLimit
-                                    ? 'Limit reached — upgrade to apply again'
-                                    : `${remaining} remaining`}
                             </p>
                         </div>
-                        <span className="inline-flex items-center gap-1.5 text-[12px] text-zinc-400 bg-zinc-800/60 border border-zinc-700/60 px-3 py-1.5 rounded-full whitespace-nowrap shrink-0">
-                            <span className="text-zinc-500">Plan:</span>
-                            <strong className="text-zinc-200 font-medium">{plan.name}</strong>
+                        <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-400 bg-zinc-800 border border-zinc-700 rounded-full px-2.5 py-1">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                            </svg>
+                            {plan.name}
                         </span>
                     </div>
 
                     {/* Progress bar */}
-                    <div className="mb-5">
-                        <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                            <div
-                                className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                                style={{ width: `${usagePercentage}%` }}
-                            />
-                        </div>
-                        <div className="flex justify-between mt-1.5 text-[11px] text-zinc-700">
-                            <span>{applicationCount} used</span>
-                            <span>{plan.maxApplicationsPerMonth} limit</span>
-                        </div>
+                    <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden mb-3">
+                        <div
+                            className={`h-full rounded-full transition-all duration-500 ${trackColor}`}
+                            style={{ width: `${usagePercent}%` }}
+                        />
                     </div>
 
-                    {/* Upsell banner */}
-                    <div className={`flex items-center gap-3 rounded-xl px-4 py-3 ${
-                        hasReachedLimit
-                            ? 'bg-red-950/30 border border-red-900/30'
-                            : 'bg-blue-950/20 border border-blue-900/20'
-                    }`}>
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            hasReachedLimit
-                                ? 'bg-red-950/60 text-red-400'
-                                : 'bg-blue-950/60 text-blue-400'
-                        }`}>
-                            <Rocket className="w-3.5 h-3.5" />
-                        </div>
-                        <p className={`flex-1 text-[12.5px] leading-relaxed ${
-                            hasReachedLimit ? 'text-red-400/80' : 'text-blue-400/80'
-                        }`}>
+                    <div className="flex items-center justify-between gap-4">
+                        <p className="text-xs text-zinc-500">
                             {hasReachedLimit
-                                ? "You've used all your applications. Upgrade to keep applying."
-                                : "Need more applications? Premium unlocks unlimited submissions."}
+                                ? 'Quota full — resets next month'
+                                : `${remaining} application${remaining !== 1 ? 's' : ''} remaining`}
                         </p>
                         <Link
                             href="/plans"
-                            className={`text-[12px] font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
-                                hasReachedLimit
-                                    ? 'bg-red-950/60 border border-red-800/40 text-red-300 hover:bg-red-900/40'
-                                    : 'bg-blue-950/60 border border-blue-800/30 text-blue-300 hover:bg-blue-900/30'
-                            }`}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors whitespace-nowrap"
                         >
-                            {hasReachedLimit ? 'Upgrade now' : 'View plans'}
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7a18.894 18.894 0 01-3.818 1.357M10.3 8.52a18.89 18.89 0 011.356-3.817m0 0a3 3 0 113.882 3.882 3 3 0 01-3.882-3.882z" />
+                            </svg>
+                            Upgrade for unlimited
                         </Link>
                     </div>
                 </div>
 
-                {/* Form or locked state */}
+                {/* Form area */}
                 {hasReachedLimit ? (
-                    <div className="bg-zinc-900/40 border border-dashed border-zinc-800 rounded-2xl p-10 flex flex-col items-center text-center gap-3">
-                        <div className="w-10 h-10 bg-zinc-800/80 border border-zinc-700/50 text-zinc-600 rounded-xl flex items-center justify-center">
-                            <CircleInfo className="w-5 h-5" />
+                    <div className="bg-zinc-900/50 border border-dashed border-zinc-800 rounded-2xl p-12 text-center">
+                        <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-3">
+                            <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
                         </div>
-                        <div>
-                            <h4 className="text-[14px] font-semibold text-zinc-300 mb-1">Application limit reached</h4>
-                            <p className="text-[13px] text-zinc-600 max-w-xs leading-relaxed">
-                                You've used all {plan.maxApplicationsPerMonth} applications for this month. Upgrade your plan to continue.
-                            </p>
-                        </div>
+                        <h4 className="text-sm font-semibold text-zinc-200 mb-1">Monthly limit reached</h4>
+                        <p className="text-sm text-zinc-500 max-w-xs mx-auto leading-relaxed mb-5">
+                            You've used all {plan.maxApplicationsPerMonth} applications for this cycle. Upgrade to keep applying, or wait until next month.
+                        </p>
                         <Link
                             href="/plans"
-                            className="inline-flex items-center gap-1.5 mt-1 text-[12.5px] font-medium text-blue-400 bg-blue-950/30 border border-blue-900/30 hover:bg-blue-950/50 px-4 py-2 rounded-lg transition"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors"
                         >
-                            View upgrade options
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
+                            See upgrade options
                         </Link>
                     </div>
                 ) : (
-                    <div className="animate-in fade-in-50 duration-300">
-                        <JobApply applicant={user} job={job} />
+                    <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+                        {/* Job context */}
+                        {job && (
+                            <div className="mb-4 px-1">
+                                <p className="text-[11px] font-medium uppercase tracking-widest text-zinc-500 mb-1">
+                                    Now applying
+                                </p>
+                                <h1 className="text-lg font-semibold text-zinc-100">{job.title}</h1>
+                                {job.company && (
+                                    <p className="text-sm text-zinc-400 mt-0.5">{job.company}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Form card with subtle indigo accent border */}
+                        <div className="relative rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden ring-1 ring-indigo-500/10">
+                            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent" />
+                            <JobApply applicant={user} job={job} />
+                        </div>
                     </div>
                 )}
 
